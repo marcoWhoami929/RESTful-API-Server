@@ -6,8 +6,10 @@
  * @Date:       $Date:$ Nov-2015
  * @Version:    $Rev:$ 1.0
  * @Developer:  Federico Guzman (federicoguzman@gmail.com)
+ * @Developer Modified:  Marco Antonio Lopez Perez (disprosoft@gmail.com)
+ * @Date:     $Date:$ Enero 2021
+ * @Version:    $Rev:$ 1.1
  **/
-
 /* Los headers permiten acceso desde otro dominio (CORS) a nuestro REST API o desde un cliente remoto via HTTP
  * Removiendo las lineas header() limitamos el acceso a nuestro RESTfull API a el mismo dominio
  * Nótese los métodos permitidos en Access-Control-Allow-Methods. Esto nos permite limitar los métodos de consulta a nuestro RESTfull API
@@ -25,7 +27,7 @@ include_once '../include/Config.php';
 /* Puedes utilizar este file para conectar con base de datos incluido en este demo; 
  * si lo usas debes eliminar el include_once del file Config ya que le mismo está incluido en DBHandler 
  **/
-//require_once '../include/DbHandler.php'; 
+require_once '../include/DbHandler.php'; 
 
 require '../libs/Slim/Slim.php'; 
 \Slim\Slim::registerAutoloader(); 
@@ -34,21 +36,23 @@ $app = new \Slim\Slim();
 
 /* Usando GET para consultar los autos */
 
-$app->get('/auto', function() {
+$app->get('/auto', function() use($app) {
     
     $response = array();
-    //$db = new DbHandler();
+    $db = new DbHandler();
 
-    /* Array de autos para ejemplo response
-     * Puesdes usar el resultado de un query a la base de datos mediante un metodo en DBHandler
-     **/
-    $autos = array( 
-                    array('make'=>'Toyota', 'model'=>'Corolla', 'year'=>'2006', 'MSRP'=>'18,000'),
-                    array('make'=>'Nissan', 'model'=>'Sentra', 'year'=>'2010', 'MSRP'=>'22,000')
-            );
+    $id = $app->request()->get('id');
     
+    if (isset($id)) {
+ 
+        $autos = $db->showAutoId($id);
+      
+    }else{
+        $autos = $db->showAuto();
+    }
+
     $response["error"] = false;
-    $response["message"] = "Autos cargados: " . count($autos); //podemos usar count() para conocer el total de valores de un array
+    $response["message"] = "Autos cargados: " . count($autos);
     $response["autos"] = $autos;
 
     echoResponse(200, $response);
@@ -61,17 +65,18 @@ $app->post('/auto', 'authenticate', function() use ($app) {
     verifyRequiredParams(array('make', 'model', 'year', 'msrp'));
 
     $response = array();
-    //capturamos los parametros recibidos y los almacxenamos como un nuevo array
-    $param['make']  = $app->request->post('make');
-    $param['model'] = $app->request->post('model');
-    $param['year']  = $app->request->post('year');
-    $param['msrp']  = $app->request->post('msrp');
     
+    $param['make']  = $app->request()->post('make');
+    $param['model'] = $app->request()->post('model');
+    $param['year']  = $app->request()->post('year');
+    $param['msrp']  = $app->request()->post('msrp');
+
     /* Podemos inicializar la conexion a la base de datos si queremos hacer uso de esta para procesar los parametros con DB */
-    //$db = new DbHandler();
+    $db = new DbHandler();
 
     /* Podemos crear un metodo que almacene el nuevo auto, por ejemplo: */
-    //$auto = $db->createAuto($param);
+    $insert = $db->createAuto($param);
+     
 
     if ( is_array($param) ) {
         $response["error"] = false;
@@ -83,7 +88,64 @@ $app->post('/auto', 'authenticate', function() use ($app) {
     }
     echoResponse(201, $response);
 });
+/*
+USANDO DELETE
+ */
+$app->delete('/auto','authenticate',function() use ($app){
 
+    $response =  array();  
+
+    $db = new DbHandler();
+
+    $id = $app->request()->post('id');
+
+    $delete = $db->deleteAuto($id);
+
+    if ($delete == "ok") {
+        
+        $response["error"] = false;
+        $response["message"] = "Auto eliminado satisfactoriamente!";
+      
+
+    }else{
+
+        $response["error"] = true;
+        $response["message"] = "Error al eliminar Por favor intenta nuevamente.";
+
+    }
+  
+    echoResponse(200, $response);
+});
+//USANDO METODO PUT
+$app->put('/auto','authenticate',function() use ($app){
+
+    $request_params = array();
+    $request_params = $_REQUEST;
+    $response =  array();
+
+    $db =  new DbHandler();
+
+    $parsedBody = $app->request()->getBody();
+    parse_str($parsedBody, $request_params);
+
+    $update = $db->updateAuto($request_params);
+
+    if ($update == "ok") {
+        
+        $response["error"] = false;
+        $response["message"] = "Auto actualizado satisfactoriamente!";
+      
+
+    }else{
+
+        $response["error"] = true;
+        $response["message"] = "Error al actualizar Por favor intenta nuevamente.";
+
+    }
+    echoResponse(200, $response);
+    
+
+});
 /* corremos la aplicación */
 $app->run();
 
