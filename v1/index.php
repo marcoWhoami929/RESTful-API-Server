@@ -1,20 +1,5 @@
 <?php
-/**
- *
- * @About:      API Interface
- * @File:       index.php
- * @Date:       $Date:$ Nov-2015
- * @Version:    $Rev:$ 1.0
- * @Developer:  Federico Guzman (federicoguzman@gmail.com)
- * @Developer Modified:  Marco Antonio Lopez Perez (disprosoft@gmail.com)
- * @Date:     $Date:$ Enero 2021
- * @Version:    $Rev:$ 1.1
- **/
-/* Los headers permiten acceso desde otro dominio (CORS) a nuestro REST API o desde un cliente remoto via HTTP
- * Removiendo las lineas header() limitamos el acceso a nuestro RESTfull API a el mismo dominio
- * Nótese los métodos permitidos en Access-Control-Allow-Methods. Esto nos permite limitar los métodos de consulta a nuestro RESTfull API
- * Mas información: https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
- **/
+
 header("Access-Control-Allow-Origin: *");
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: PUT, GET, POST, DELETE, OPTIONS');
@@ -33,10 +18,10 @@ require '../libs/Slim/Slim.php';
 \Slim\Slim::registerAutoloader(); 
 $app = new \Slim\Slim();
 
-
-/* Usando GET para consultar los autos */
-
-$app->get('/auto', function() use($app) {
+/*
+CONSULTA LISTA DE CITAS
+ */
+$app->get('/citas', function() use($app) {
     
     $response = array();
     $db = new DbHandler();
@@ -45,53 +30,52 @@ $app->get('/auto', function() use($app) {
     
     if (isset($id)) {
  
-        $autos = $db->showAutoId($id);
+        $citas = $db->verCitaId($id);
       
     }else{
-        $autos = $db->showAuto();
+        $citas = $db->verCita();
     }
 
     $response["error"] = false;
-    $response["message"] = "Autos cargados: " . count($autos);
-    $response["autos"] = $autos;
+    $response["message"] = "Citas cargadas: " . count($citas);
+    $response["citas"] = $citas;
 
     echoResponse(200, $response);
 });
 
-/* Usando POST para crear un auto */
+/*
+CREAR UNA NUEVA CITA
+ */
+$app->post('/cita', 'authenticate', function() use ($app) {
 
-$app->post('/auto', 'authenticate', function() use ($app) {
-    // check for required params
     verifyRequiredParams(array('make', 'model', 'year', 'msrp'));
 
-    $response = array();
-    
-    $param['make']  = $app->request()->post('make');
-    $param['model'] = $app->request()->post('model');
-    $param['year']  = $app->request()->post('year');
-    $param['msrp']  = $app->request()->post('msrp');
+    $request_params = array();
+    $request_params = $_REQUEST;
+    $response =  array();
 
-    /* Podemos inicializar la conexion a la base de datos si queremos hacer uso de esta para procesar los parametros con DB */
-    $db = new DbHandler();
+    $db =  new DbHandler();
 
-    /* Podemos crear un metodo que almacene el nuevo auto, por ejemplo: */
-    $insert = $db->createAuto($param);
+    $parsedBody = $app->request()->getBody();
+    parse_str($parsedBody, $request_params);
+
+    $insert = $db->nuevaCita($request_params);
      
 
     if ( is_array($param) ) {
         $response["error"] = false;
-        $response["message"] = "Auto creado satisfactoriamente!";
-        $response["auto"] = $param;
+        $response["message"] = "Cita creada satisfactoriamente!";
+        $response["cita"] = $param;
     } else {
         $response["error"] = true;
-        $response["message"] = "Error al crear auto. Por favor intenta nuevamente.";
+        $response["message"] = "Error al crear la cita. Por favor intenta nuevamente.";
     }
     echoResponse(201, $response);
 });
 /*
-USANDO DELETE
+ELIMINAR CITA
  */
-$app->delete('/auto','authenticate',function() use ($app){
+$app->delete('/cita','authenticate',function() use ($app){
 
     $response =  array();  
 
@@ -116,8 +100,10 @@ $app->delete('/auto','authenticate',function() use ($app){
   
     echoResponse(200, $response);
 });
-//USANDO METODO PUT
-$app->put('/auto','authenticate',function() use ($app){
+/*
+ACTUALIZAR CITA
+ */
+$app->put('/cita','authenticate',function() use ($app){
 
     $request_params = array();
     $request_params = $_REQUEST;
@@ -145,6 +131,36 @@ $app->put('/auto','authenticate',function() use ($app){
     echoResponse(200, $response);
     
 
+});
+
+/*
+AGREGAR PACIENTE
+ */
+$app->post('/paciente', 'authenticate', function() use ($app) {
+
+    verifyRequiredParams(array('nombreCompleto', 'email', 'password', 'direccion','ciudad','telefono','celular','nombreCompletoPadre','nombreCompletoMadre'));
+
+    $request_params = array();
+    $request_params = $_REQUEST;
+    $response =  array();
+
+    $db =  new DbHandler();
+
+    $parsedBody = $app->request()->getBody();
+    parse_str($parsedBody, $request_params);
+
+    $insert = $db->nuevoPaciente($request_params);
+     
+
+    if ( is_array($param) ) {
+        $response["error"] = false;
+        $response["message"] = "Paciente registrado satisfactoriamente!";
+        $response["cita"] = $param;
+    } else {
+        $response["error"] = true;
+        $response["message"] = "Error al crear al paciente. Por favor intenta nuevamente.";
+    }
+    echoResponse(201, $response);
 });
 /* corremos la aplicación */
 $app->run();

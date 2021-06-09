@@ -1,11 +1,8 @@
 <?php
 /**
  *
- * @About:      Database connection manager class
- * @File:       Database.php
- * @Date:       $Date:$ Nov-2015
+ * @File:       DbConnect.php
  * @Version:    $Rev:$ 1.0
- * @Developer:  Federico Guzman (federicoguzman@gmail.com)
  * @Developer Modified:  Marco Antonio Lopez Perez (disprosoft@gmail.com)
  * @Date:     $Date:$ Enero 2021
  * @Version:    $Rev:$ 1.1

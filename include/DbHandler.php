@@ -1,11 +1,8 @@
 <?php
 /**
  *
- * @About:      Database connection manager class
  * @File:       Database.php
- * @Date:       $Date:$ Nov-2015
  * @Version:    $Rev:$ 1.0
- * @Developer:  Federico Guzman (federicoguzman@gmail.com)
  * @Developer Modified:  Marco Antonio Lopez Perez (disprosoft@gmail.com)
  * @Date:     $Date:$ Enero 2021
  * @Version:    $Rev:$ 1.1
@@ -20,15 +17,19 @@ class DbHandler {
         $db = new DbConnect();
         $this->conn = $db->connect();
     }
-    //@insertar un nuevo auto
-    public function createAuto($array)
+    //@insertar un nueva cita
+    public function nuevaCita($array)
     {
-        $stmt = $this->conn->prepare("INSERT INTO auto(make,model,year,msrp) VALUES(:make,:model,:year,:msrp)");
+        $stmt = $this->conn->prepare("INSERT INTO cita(nombreCita,idPaciente,idMedico,idConsultorio,idTipoCita,notas,fechaCita,horaCita) VALUES(:nombreCita,:idPaciente,:idMedico,:idConsultorio,:idTipoCita,:notas,:fechacita,:horaCita)");
 
-        $stmt-> bindParam(":make",$array["make"],PDO::PARAM_STR);
-        $stmt-> bindParam(":model",$array["model"],PDO::PARAM_STR);
-        $stmt-> bindParam(":year",$array["year"],PDO::PARAM_STR);
-        $stmt-> bindParam(":msrp",$array["msrp"],PDO::PARAM_STR);
+        $stmt-> bindParam(":nombreCita",$array["nombreCita"],PDO::PARAM_STR);
+        $stmt-> bindParam(":idPaciente",$array["idPaciente"],PDO::PARAM_INT);
+        $stmt-> bindParam(":idMedico",$array["idMedico"],PDO::PARAM_INT);
+        $stmt-> bindParam(":idConsultorio",$array["idConsultorio"],PDO::PARAM_INT);
+        $stmt-> bindParam(":idTipoCita",$array["idTipoCita"],PDO::PARAM_INT);
+        $stmt-> bindParam(":notas",$array["notas"],PDO::PARAM_STR);
+        $stmt-> bindParam(":fechacita",$array["fechacita"],PDO::PARAM_STR);
+        $stmt-> bindParam(":horaCita",$array["horaCita"],PDO::PARAM_STR);
 
        if($stmt->execute()){
 
@@ -42,30 +43,30 @@ class DbHandler {
 
 
     }
-    //@ver auto
-    public function showAuto(){
+    //@ver lista de citas
+    public function verCita(){
 
-        $stmt = $this->conn->prepare("SELECT * FROM auto");
+        $stmt = $this->conn->prepare("SELECT * FROM citas");
 
         $stmt -> execute();
 
         return $stmt-> fetchAll();
 
     }
-    //@ver un unico auto
-    public function showAutoId($id){
+    //@ver una cita
+    public function verCitaId($id){
 
-        $stmt =  $this->conn->prepare("SELECT * FROM auto where id = '$id'");
+        $stmt =  $this->conn->prepare("SELECT * FROM citas where id = '$id'");
 
         $stmt -> execute();
 
         return $stmt-> fetch();
 
     }
-    //@eliminar auto
-    public function deleteAuto($id){
+    //@eliminar cita
+    public function eliminarCita($id){
 
-        $stmt = $this->conn->prepare("DELETE  FROM auto  where id = '$id'");
+        $stmt = $this->conn->prepare("DELETE FROM citas  where id = '$id'");
 
         $stmt-> execute();
 
@@ -84,13 +85,13 @@ class DbHandler {
 
 
     }
-    //@update auto
-    public function updateAuto($array)
+    //@update cita
+    public function actualizarCita($array)
     {
-        $stmt = $this->conn->prepare("UPDATE auto set year = :year where id = :id");
+        $stmt = $this->conn->prepare("UPDATE citas set nombreCita = :nombreCita where id = :id");
 
         $stmt-> bindParam(":id",$array["id"],PDO::PARAM_STR);
-        $stmt-> bindParam(":year",$array["year"],PDO::PARAM_STR);
+        $stmt-> bindParam(":nombreCita",$array["nombreCita"],PDO::PARAM_STR);
 
        
         $stmt->execute();
@@ -98,6 +99,34 @@ class DbHandler {
         $affected = $stmt->rowCount();
 
        if($affected != 0){
+
+         return "ok";
+
+       }else{
+
+        return "error";
+
+       }
+
+
+    }
+     //@nuevo paciente
+    public function nuevoPaciente($array)
+    {
+        $stmt = $this->conn->prepare("INSERT INTO pacientes(nombreCompleto, email, password, direccion,ciudad,telefono,celular,nombreCompletoPadre,nombreCompletoMadre) VALUES(:nombreCompleto, :email, :password, :direccion,:ciudad,:telefono,:celular,:nombreCompletoPadre,:nombreCompletoMadre)");
+
+        $stmt-> bindParam(":nombreCompleto",$array["nombreCompleto"],PDO::PARAM_STR);
+        $stmt-> bindParam(":email",$array["email"],PDO::PARAM_STR);
+        $stmt-> bindParam(":direccion",$array["direccion"],PDO::PARAM_STR);
+        $stmt-> bindParam(":ciudad",$array["ciudad"],PDO::PARAM_STR);
+        $stmt-> bindParam(":telefono",$array["telefono"],PDO::PARAM_STR);
+        $stmt-> bindParam(":celular",$array["celular"],PDO::PARAM_STR);
+        $stmt-> bindParam(":nombreCompletoPadre",$array["nombreCompletoPadre"],PDO::PARAM_STR);
+        $stmt-> bindParam(":nombreCompletoMadre",$array["nombreCompletoMadre"],PDO::PARAM_STR);
+
+     
+
+       if($stmt->execute()){
 
          return "ok";
 
